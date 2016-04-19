@@ -1,0 +1,11 @@
+setClass("Peptide", 
+         slots=list(Kcount="integer",
+                    sequence="character",
+                    modpos="integer",
+                    ionlist="list",
+                    areas="ANY",
+                    areas.filtered="ANY",
+                    median.ratio="ANY",
+                    peakbounds="vector",
+                    prec.z="vector"
+         ))

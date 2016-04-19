@@ -4,7 +4,7 @@
 #### make function to return named list of fragment masses
 
 
-getIons=function(sequence=peptides[21],modmass=100.016044,moddelta=4.025107){
+getIons=function(sequence=peptides[16],modmass=100.016044,moddelta=4.025107){
 	options(digits=10)
 	### number and position of lysine residues
 	seqsplit<-unlist(strsplit(sequence,split=""))
@@ -16,6 +16,36 @@ getIons=function(sequence=peptides[21],modmass=100.016044,moddelta=4.025107){
 	water=18.010565
 	###
 	### handle peptides with diff K numbers differently
+	if(Kcount==1){
+	  Bdiffions<-seq(from=Kpos[1],to=peplen-1)
+	  Ydiffions<-seq(from=peplen-Kpos[1]+1,to=peplen-1)
+    ionlist_l<-list()
+    for(x in Bdiffions){
+      if(x>=2 & x!=peplen){
+        ionlist_l[["b_diff"]][[x]]<-round(sum(unlist(AA.masses[seqsplit[1:x]]))+modmass+proton,digits=4)
+      }
+    }
+    for(x in Ydiffions){
+      if(x>=2 & x!=peplen){
+        ionlist_l[["y_diff"]][[x]]<-round(sum(unlist(AA.masses[seqrev[1:x]]))+modmass+proton+water,digits=4)
+      }
+    }
+    ### determine ion masses for heavy/heavy
+    ionlist_h<-lapply(FUN=function(x) x+moddelta,ionlist_l[1:2])
+    
+    ### determine precursor for light
+    prec<-list()
+     for(i in 1:5){
+      prec$L[[i]]<-round(sum(unlist(AA.masses[seqsplit]))+modmass*Kcount+proton*i+water,digits=4)/i
+    }
+    ### determine heavy precursor masses
+    for(i in 1:5){
+      prec$H[[i]]<-round(sum(unlist(AA.masses[seqsplit]))+moddelta+modmass*Kcount+proton*i+water,digits=4)/i
+    }
+    
+    ionlist<-list(prec=prec,L=ionlist_l,H=ionlist_h)
+    
+	}
 	if(Kcount==2){
 		#### determine ordinals for diff ions and those containing both
 		Bdiffions<-seq(from=Kpos[1],to=Kpos[2]-1)
@@ -28,7 +58,7 @@ getIons=function(sequence=peptides[21],modmass=100.016044,moddelta=4.025107){
 		ionlist_ll<-list()
 		for(x in Bdiffions){
 			if(x>=2 & x!=peplen){
-				ionlist_ll[["b_diff"]][[x]]<-round(sum(unlist(AA.masses[seqsplit[Kpos[1]:x]]))+modmass+proton,digits=4)
+				ionlist_ll[["b_diff"]][[x]]<-round(sum(unlist(AA.masses[seqsplit[1:x]]))+modmass+proton,digits=4)
 				}
 			}
 		for(x in Ydiffions){
@@ -61,19 +91,38 @@ getIons=function(sequence=peptides[21],modmass=100.016044,moddelta=4.025107){
 		#ionlist_lh
 		#ionlist_hl
 
-		}
+		
+		### finally, determine precursor masses
+		### light/light
+		p1ll<-round(sum(unlist(AA.masses[seqsplit]))+modmass*Kcount+proton*1+water,digits=4)/1
+		p2ll<-round(sum(unlist(AA.masses[seqsplit]))+modmass*Kcount+proton*2+water,digits=4)/2
+		p3ll<-round(sum(unlist(AA.masses[seqsplit]))+modmass*Kcount+proton*3+water,digits=4)/3
+		p4ll<-round(sum(unlist(AA.masses[seqsplit]))+modmass*Kcount+proton*4+water,digits=4)/4
+		p5ll<-round(sum(unlist(AA.masses[seqsplit]))+modmass*Kcount+proton*5+water,digits=4)/5
+		### light/heavy
+		p1lh<-round(sum(unlist(AA.masses[seqsplit]))+moddelta+modmass*Kcount+proton*1+water,digits=4)/1
+		p2lh<-round(sum(unlist(AA.masses[seqsplit]))+moddelta+modmass*Kcount+proton*2+water,digits=4)/2
+		p3lh<-round(sum(unlist(AA.masses[seqsplit]))+moddelta+modmass*Kcount+proton*3+water,digits=4)/3
+		p4lh<-round(sum(unlist(AA.masses[seqsplit]))+moddelta+modmass*Kcount+proton*4+water,digits=4)/4
+		p5lh<-round(sum(unlist(AA.masses[seqsplit]))+moddelta+modmass*Kcount+proton*5+water,digits=4)/5
+		### heavy/heavy
+		p1hh<-round(sum(unlist(AA.masses[seqsplit]))+moddelta*2+modmass*Kcount+proton*1+water,digits=4)/1
+		p2hh<-round(sum(unlist(AA.masses[seqsplit]))+moddelta*2+modmass*Kcount+proton*2+water,digits=4)/2
+		p3hh<-round(sum(unlist(AA.masses[seqsplit]))+moddelta*2+modmass*Kcount+proton*3+water,digits=4)/3
+		p4hh<-round(sum(unlist(AA.masses[seqsplit]))+moddelta*2+modmass*Kcount+proton*4+water,digits=4)/4
+		p5hh<-round(sum(unlist(AA.masses[seqsplit]))+moddelta*2+modmass*Kcount+proton*5+water,digits=4)/5
+	
+		ionlist<-list(prec=list(LL=c(p1ll,p2ll,p3ll,p4ll,p5ll),LH=c(p1lh,p2lh,p3lh,p4lh,p5lh),HH=c(p1hh,p2hh,p3hh,p4hh,p5hh)),LL=ionlist_ll,LH=ionlist_lh,HL=ionlist_hl,HH=ionlist_hh)
+		
+  	}
+	if(Kcount>=3){
+	  ionlist<-list() 
+	}
 
 	#### have lists to extract
-	ionlists<-list(LL=ionlist_ll,LH=ionlist_lh,HL=ionlist_hl,HH=ionlist_hh)
 	return(ionlist)
+
 	}
 
 
 
-getPepPrecMz=function(pepmass=M,chargemax=5){
-		listcharge<-c()
-	for(i in 1:chargemax){
-		listcharge[i] = (pepmass+i*1.00727)/i
-		}
-	return(listcharge)
-	}
