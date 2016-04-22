@@ -13,24 +13,32 @@ head(s)
 mzxmlfile="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzXML"
 
 set10pct<-s[which(s[,"File.Name"]=="151023_0002_BSA_10pct_light_sw1.wiff"),]
+set1pct<-s[which(s[,"File.Name"]=="151023_0002_BSA_1pct_light_sw1.wiff"),]
+
 testline<-which(set10pct[,1]==sequence)
 
 ##### almost works for any peptide, finish function after testing
+stoich1<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_1pct_light_sw1.mzXML",
+                       sky.report=set1pct,
+                       ppm=20,mzrange=c(100,1500),
+                       threshold=30)
 
 stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzXML",
                        sky.report=set10pct,
-                       wind.file="windoe.txt",
                        windowtable="windoe.txt",
-                       ppm=20,
-                       threshold=10,
-                       mzmax=1500)
+                       ppm=30,
+                       threshold=30,
+                       mzrange=c(500,1500))
 {
-  system.time(ms2xic(file=mzxml,precMz=temppep@ionlist$prec$LL[y], fragMz=600, type="l",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm=10))
+  #system.time(ms2xic(file=mzxml,precMz=temppep@ionlist$prec$LL[y], fragMz=600, type="l",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm=10))
   ###### get peptide info and make an object of peptide class with info
   peptides<-unique(sky.report[,"Peptide"])
   peplist<-list()
+  windowtab<-read.delim(file=windowtable,head=F,stringsAsFactors=F)
+  mslink <- openMSfile(filename=mzxml)
+  hdlink <-	header(mslink)
   for(k in peptides){
-    #x<-peptides[15]
+    #k<-peptides[1]
     print(k)
     temppep<-new(Class="Peptide")
     temppep@ionlist<-getIons(sequence=k)
@@ -52,13 +60,13 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       counter=1
       for(y in temppep@prec.z){
         fragments<-na.omit(unlist(temppep@ionlist$L))
-        fragments<-fragments[fragments<=mzmax]
+        fragments<-fragments[fragments>=temppep@ionlist$prec$L[y] & fragments<=mzrange[2]]
         nfrag<-length(fragments)
         ### reset counter to 1
         counter=1
         # xics[[y]]<-y
         for(z in fragments){
-          xics$light[[paste(y)]][[paste(z)]]<-ms2xic(file=mzxml,precMz=temppep@ionlist$prec$L[y], fragMz=z, type="l",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm=ppm)
+          xics$light[[paste(y)]][[paste(z)]]<-ms2xic(ms=mslink,hd=hdlink,precMz=temppep@ionlist$prec$L[y], fragMz=z, type="l",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm=ppm)
           if(counter==1){
             ### part to plot while extracting only works if max height is known, fix later
             xicmat[[paste(y)]]<-data.frame(xics$light[[paste(y)]][[paste(z)]])
@@ -80,10 +88,10 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       ########################################################################
       for(y in temppep@prec.z){
         fragments<-na.omit(unlist(temppep@ionlist$H))
-        fragments<-fragments[fragments<=1500]
-        counter<-tempcounter
+        fragments<-fragments[fragments>=temppep@ionlist$prec$L[y] & fragments<=mzrange[2]]
+        counter<-length(xicmat[[paste(y)]])
         for(z in fragments){
-          xics$heavy[[paste(y)]][[paste(z)]]<-ms2xic(file=mzxml,precMz=temppep@ionlist$prec$H[y], fragMz=z, type="h",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm=ppm)
+          xics$heavy[[paste(y)]][[paste(z)]]<-ms2xic(ms=mslink,hd=hdlink,file=mzxml,precMz=temppep@ionlist$prec$H[y], fragMz=z, type="h",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm=ppm)
           xicmat[[paste(y)]]<-cbind(xicmat[[paste(y)]],xics$heavy[[paste(y)]][[paste(z)]][,2])
           colnames(xicmat[[paste(y)]])[counter+1]<-paste("prec=",round(temppep@ionlist$prec$H[y],digits=1),", ","frag=",z,collapse="_",sep="")
           counter=counter+1
@@ -114,6 +122,7 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       
       #### return the media value of all ratios    
       temppep@areas[["position1"]]<-list(light=sumlight,heavy=sumheavy,ratio=ratio)
+      temppep@areas.filtered[["position1"]]<-list(light=sumlight2,heavy=sumheavy2,ratio=ratios)
       temppep@median.ratio[["position1"]]<-median(na.omit(ratios))
       
       
@@ -138,14 +147,14 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       for(y in temppep@prec.z){
         ###   get fragments ions for b_diff to extract
         fragments<-na.omit(unlist(temppep@ionlist$LL$b_diff))
-        fragments<-fragments[fragments<=mzmax]
+        fragments<-fragments[fragments>=temppep@ionlist$prec$LL[y] & fragments<=mzrange[2]]
         nfrag<-length(fragments)
         ### reset counter to 1
         counter=1
         #b_diff.xicmat[[paste(y)]]<-data.frame()
         for(z in fragments){
           #xicdataframe<-cbind(xicdataframe,ms2xic(file=mzxml,precMz=temppep@ionlist$prec$L[y], fragMz=z, rtrange=temppep@peakbounds))
-          xics$light[[paste(y)]][[paste(z)]]<-ms2xic(file=mzxml,precMz=temppep@ionlist$prec$LL[y], fragMz=z, type="l",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount,ppm= ppm)
+          xics$light[[paste(y)]][[paste(z)]]<-ms2xic(ms=mslink,hd=hdlink,file=mzxml,precMz=temppep@ionlist$prec$LL[y], fragMz=z, type="l",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount,ppm= ppm)
           if(counter==1){
             ### part to plot while extracting, only works if max height is known
             b_diff.xicmat[[paste(y)]]<-data.frame(xics$light[[paste(y)]][[paste(z)]])
@@ -165,11 +174,11 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       for(y in temppep@prec.z){
         fragments<-na.omit(unlist(temppep@ionlist$HH$b_diff))
         # xics[[y]]<-y
-        fragments<-fragments[fragments<=mzmax]
-        counter=tempcount
+        fragments<-fragments[fragments>=temppep@ionlist$prec$LL[y] & fragments<=mzrange[2]]
+        counter<-length(xicmat[[paste(y)]])
         for(z in fragments){
           
-          xics$heavy[[paste(y)]][[paste(z)]]<-ms2xic(file=mzxml,precMz=temppep@ionlist$prec$HH[y], fragMz=z, type="h",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount,ppm= ppm)
+          xics$heavy[[paste(y)]][[paste(z)]]<-ms2xic(ms=mslink,hd=hdlink,file=mzxml,precMz=temppep@ionlist$prec$HH[y], fragMz=z, type="h",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount,ppm= ppm)
           b_diff.xicmat[[paste(y)]]<-cbind(b_diff.xicmat[[paste(y)]],xics$heavy[[paste(y)]][[paste(z)]][,2])
           colnames(b_diff.xicmat[[paste(y)]])[counter+1]<-paste("prec=",round(temppep@ionlist$prec$HH[y],digits=1),", ","frag=",z,collapse="_",sep="")
           counter=counter+1
@@ -194,11 +203,12 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       
       #################################################
       ### filter based on which values are at least 10 
-      sumheavy2<-sumheavy[which(sumlight>=threshold)]
-      sumlight2<-sumlight[which(sumlight>=threshold)]
+      sumheavy2<-sumheavy[which(sumheavy>=threshold)]
+      sumlight2<-sumlight[which(sumheavy>=threshold)]
       ratios<-sumlight2/(sumlight2+sumheavy2)
       #### return the media value of all ratios    
       temppep@areas[["position1"]]<-list(light=sumlight,heavy=sumheavy,ratio=ratio)
+      temppep@areas.filtered[["position1"]]<-list(light=sumlight2,heavy=sumheavy2,ratio=ratios)
       temppep@median.ratio[["position1"]]<-median(na.omit(ratios))
       
       
@@ -213,12 +223,12 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       for(y in temppep@prec.z){
         ###   get fragments ions for b_diff to extract
         fragments<-na.omit(unlist(temppep@ionlist$LL$y_diff))
-        fragments<-fragments[fragments<=mzmax]
+        fragments<-fragments[fragments>=temppep@ionlist$prec$LL[y] & fragments<=mzrange[2]]
         nfrag<-length(fragments)
         counter=1
         for(z in fragments){
           #xicdataframe<-cbind(xicdataframe,ms2xic(file=mzxml,precMz=temppep@ionlist$prec$L[y], fragMz=z, rtrange=temppep@peakbounds))
-          xics$light[[paste(y)]][[paste(z)]]<-ms2xic(file=mzxml,precMz=temppep@ionlist$prec$LL[y], fragMz=z, type="l",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm= ppm)
+          xics$light[[paste(y)]][[paste(z)]]<-ms2xic(ms=mslink,hd=hdlink,file=mzxml,precMz=temppep@ionlist$prec$LL[y], fragMz=z, type="l",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm= ppm)
           if(counter==1){
             ### part to plot while extracting, only works if max height is known
             y_diff.xicmat[[paste(y)]]<-data.frame(xics$light[[paste(y)]][[paste(z)]])
@@ -239,11 +249,11 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       for(y in temppep@prec.z){
         fragments<-na.omit(unlist(temppep@ionlist$HH$y_diff))
         # xics[[y]]<-y
-        fragments<-fragments[fragments<=1500]
-        counter<-tempcount
+        fragments<-fragments[fragments>=temppep@ionlist$prec$LL[y] & fragments<=mzrange[2]]
+        counter<-length(xicmat[[paste(y)]])
         for(z in fragments){
           
-          xics$heavy[[paste(y)]][[paste(z)]]<-ms2xic(file=mzxml,precMz=temppep@ionlist$prec$HH[y], fragMz=z, type="h",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm= ppm)
+          xics$heavy[[paste(y)]][[paste(z)]]<-ms2xic(ms=mslink,hd=hdlink,file=mzxml,precMz=temppep@ionlist$prec$HH[y], fragMz=z, type="h",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm= ppm)
           y_diff.xicmat[[paste(y)]]<-cbind(y_diff.xicmat[[paste(y)]],xics$heavy[[paste(y)]][[paste(z)]][,2])
           colnames(y_diff.xicmat[[paste(y)]])[counter+1]<-paste("prec=",round(temppep@ionlist$prec$HH[y],digits=1),", ","frag=",z,collapse="_",sep="")
           counter=counter+1
@@ -268,11 +278,12 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       
       #################################################
       ### filter based on which values are at least 10 
-      sumheavy2<-sumheavy[which(sumlight>=threshold)]
-      sumlight2<-sumlight[which(sumlight>=threshold)]
+      sumheavy2<-sumheavy[which(sumheavy>=threshold)]
+      sumlight2<-sumlight[which(sumheavy>=threshold)]
       ratios<-sumlight2/(sumlight2+sumheavy2)
       #### return the media value of all ratios    
       temppep@areas[["position2"]]<-list(light=sumlight,heavy=sumheavy,ratio=ratio)
+      temppep@areas.filtered[["position2"]]<-list(light=sumlight2,heavy=sumheavy2,ratio=ratios)
       temppep@median.ratio[["position2"]]<-median(na.omit(ratios))
       print(k)
       print("double K peptide finished")
@@ -288,14 +299,26 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
     print(k)
     peplist[[paste(k)]]<-temppep
   }
-  temp.peplist<-peplist
-  unlist(temp.peplist)@median.ratio
-  length(temp.peplist)
+  peplist  
+}
+stoich1<-stoichwrapper(ppm=40,mzrange=c(100,1500))
+stoich3<-stoichwrapper(ppm=20,mzrange=c(100,1500))
+stoich4<-stoichwrapper(ppm=20,mzrange=c(100,1500),threshold=100)
+
+
+stoich1<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_1pct_light_sw1.mzXML",
+                       sky.report=set1pct,
+                       ppm=20,mzrange=c(100,1500),
+                       threshold=30)
+
+
+  temp.peplist<-stoich1
   allratios<-list()
   for(j in 1:length(temp.peplist)){
     allratios[[j]]<-temp.peplist[[j]]@median.ratio
   }
-  temp.peplist[[7]]@sequence
+  #temp.peplist1<-temp.peplist()
+  #temp.peplist[[39]]
   ave(na.omit(as.numeric(unlist(allratios))))
   sd(na.omit(as.numeric(unlist(allratios))))
   
