@@ -6,6 +6,10 @@ setClass("Peptide",
                     areas="ANY",
                     areas.filtered="ANY",
                     median.ratio="ANY",
+                    median.ratio.sd="ANY",
                     peakbounds="vector",
-                    prec.z="vector"
+                    prec.z="vector",
+                    lm.ratio="ANY",
+                    rank1.ratio="ANY",
+                    top3.ratio="ANY"
          ))

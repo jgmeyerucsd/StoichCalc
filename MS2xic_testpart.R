@@ -2,7 +2,7 @@
 ####### checks if both heavy and light precursors are in at least one window together, otherwise sets window index ==1 and therefore values output are NA
 ####################################
 
-#windowtab<-read.delim(file=wind.file,head=F,stringsAsFactors=F)
+windowtab<-read.delim(file="windoe.txt",head=F,stringsAsFactors=F)
 #mslink <- openMSfile(filename=file)
 #hdlink <-	header(ms)
 ms2xic=function(file="151204_0008_SStoich_lact_bRP8.mzXML",

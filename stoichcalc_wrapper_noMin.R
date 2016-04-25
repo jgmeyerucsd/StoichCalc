@@ -12,6 +12,7 @@ head(s)
 
 mzxmlfile="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzXML"
 
+set50pct<-s[which(s[,"File.Name"]=="151023_0002_BSA_50pct_light_sw1.wiff"),]
 set10pct<-s[which(s[,"File.Name"]=="151023_0002_BSA_10pct_light_sw1.wiff"),]
 set1pct<-s[which(s[,"File.Name"]=="151023_0002_BSA_1pct_light_sw1.wiff"),]
 set0pct<-s[which(s[,"File.Name"]=="151023_0002_BSA_0pct_light_sw1.wiff"),]
@@ -62,7 +63,7 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       counter=1
       for(y in temppep@prec.z){
         fragments<-na.omit(unlist(temppep@ionlist$L))
-        fragments<-fragments[fragments>=temppep@ionlist$prec$L[y] & fragments<=mzrange[2]]
+        fragments<-fragments[fragments<=mzrange[2]]
         nfrag[y]<-length(fragments)
         ### reset counter to 1
         counter=1
@@ -90,7 +91,7 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       ########################################################################
       for(y in temppep@prec.z){
         fragments<-na.omit(unlist(temppep@ionlist$H))
-        fragments<-fragments[fragments>=temppep@ionlist$prec$L[y] & fragments<=mzrange[2]]
+        fragments<-fragments[ fragments<=mzrange[2]]
         counter<-length(xicmat[[paste(y)]])
         for(z in fragments){
           xics$heavy[[paste(y)]][[paste(z)]]<-ms2xic(ms=mslink,hd=hdlink,file=mzxml,precMz=temppep@ionlist$prec$H[y], fragMz=z, type="h",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm=ppm)
@@ -138,8 +139,19 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
         x=sumheavy
         model<-lm(y~x)
         temppep@lm.ratio[["position1"]]<-coef(model)[2]
+        temppep@top3.ratio[["position1"]]<-ave(sumlight[order(sumheavy,decreasing=T)][1:3]/(sumheavy[order(sumheavy,decreasing=T)][1:3]+sumlight[order(sumheavy,decreasing=T)][1:3]))[1]
+        
       }
       temppep@rank1.ratio[["position1"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
+     
+      
+      sum(sumlight[order(sumheavy,decreasing=T)][1:3])/(sum(sumheavy[order(sumheavy,decreasing=T)][1:3])+sum(sumlight[order(sumheavy,decreasing=T)][1:3]))
+      
+      sumlight[order(sumheavy,decreasing=T)][1:3]
+      
+      
+      rank(sumheavy)
+      
       #temppep@rank1.ratio[["position1"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
       
       
@@ -166,7 +178,7 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       for(y in temppep@prec.z){
         ###   get fragments ions for b_diff to extract
         fragments<-na.omit(unlist(temppep@ionlist$LL$b_diff))
-        fragments<-fragments[fragments>=temppep@ionlist$prec$LL[y] & fragments<=mzrange[2]]
+        fragments<-fragments[fragments<=mzrange[2]]
         nfrag[y]<-length(fragments)
         ### reset counter to 1
         counter=1
@@ -193,8 +205,8 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       for(y in temppep@prec.z){
         fragments<-na.omit(unlist(temppep@ionlist$HH$b_diff))
         # xics[[y]]<-y
-        fragments<-fragments[fragments>=temppep@ionlist$prec$LL[y] & fragments<=mzrange[2]]
-        counter<-length(xicmat[[paste(y)]])
+        fragments<-fragments[fragments<=mzrange[2]]
+        counter<-length(b_diff.xicmat[[paste(y)]])
         for(z in fragments){
           
           xics$heavy[[paste(y)]][[paste(z)]]<-ms2xic(ms=mslink,hd=hdlink,file=mzxml,precMz=temppep@ionlist$prec$HH[y], fragMz=z, type="h",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount,ppm= ppm)
@@ -239,8 +251,10 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
         x=sumheavy
         model<-lm(y~x)
         temppep@lm.ratio[["position1"]]<-coef(model)[2]
+        temppep@top3.ratio[["position1"]]<-ave(sumlight[order(sumheavy,decreasing=T)][1:3]/(sumheavy[order(sumheavy,decreasing=T)][1:3]+sumlight[order(sumheavy,decreasing=T)][1:3]))[1]
+        
       }
-      temppep@rank1.ratio[["position1"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
+      temppep@rank1.ratio[["position1"]]<-sumlight2[sumheavy2==max(sumheavy2)]/(sumheavy2[sumheavy2==max(sumheavy2)]+sumlight2[sumheavy2==max(sumheavy2)])
       
       
       #### next extract y_diff
@@ -253,7 +267,7 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       for(y in temppep@prec.z){
         ###   get fragments ions for b_diff to extract
         fragments<-na.omit(unlist(temppep@ionlist$LL$y_diff))
-        fragments<-fragments[fragments>=temppep@ionlist$prec$LL[y] & fragments<=mzrange[2]]
+        fragments<-fragments[ fragments<=mzrange[2]]
         nfrag[y]<-length(fragments)
         counter=1
         for(z in fragments){
@@ -279,8 +293,8 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       for(y in temppep@prec.z){
         fragments<-na.omit(unlist(temppep@ionlist$HH$y_diff))
         # xics[[y]]<-y
-        fragments<-fragments[fragments>=temppep@ionlist$prec$LL[y] & fragments<=mzrange[2]]
-        counter<-length(xicmat[[paste(y)]])
+        fragments<-fragments[ fragments<=mzrange[2]]
+        counter<-length(y_diff.xicmat[[paste(y)]])
         for(z in fragments){
           
           xics$heavy[[paste(y)]][[paste(z)]]<-ms2xic(ms=mslink,hd=hdlink,file=mzxml,precMz=temppep@ionlist$prec$HH[y], fragMz=z, type="h",precZ=y, rtrange=temppep@peakbounds, Kcount=temppep@Kcount, ppm= ppm)
@@ -327,6 +341,8 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
         x=sumheavy
         model<-lm(y~x)
         temppep@lm.ratio[["position2"]]<-coef(model)[2]
+        temppep@top3.ratio[["position2"]]<-ave(sumlight[order(sumheavy,decreasing=T)][1:3]/(sumheavy[order(sumheavy,decreasing=T)][1:3]+sumlight[order(sumheavy,decreasing=T)][1:3]))[1]
+        
       }
       temppep@rank1.ratio[["position2"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
       
@@ -348,17 +364,20 @@ stoich4<-stoichwrapper(ppm=20,mzrange=c(100,1500),threshold=100)
 
 stoich0<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_0pct_light_sw1.mzXML",
                        sky.report=set0pct,
-                       ppm=20,mzrange=c(100,1500),
-                       threshold=15)
+                       ppm=15,mzrange=c(100,1500),
+                       threshold=30)
 stoich1<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_1pct_light_sw1.mzXML",
                        sky.report=set1pct,
-                       ppm=20,mzrange=c(100,1500),
+                       ppm=15,mzrange=c(100,1500),
                        threshold=30)
 stoich10<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzXML",
                        sky.report=set10pct,
                        ppm=15,mzrange=c(100,1500),
                        threshold=30)
-
+stoich50<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_50pct_light_sw1.mzXML",
+                        sky.report=set50pct,
+                        ppm=15,mzrange=c(100,1500),
+                        threshold=30)
 
 return.lmrat=function(object=temp.peplist[[1]]){
   object@lm.ratio
@@ -372,13 +391,19 @@ return.rank1.ratio=function(object=temp.peplist[[1]]){
   object@rank1.ratio
 }
 
+return.top3.ratio=function(object=temp.peplist[[1]]){
+  object@top3.ratio
+}
+
+
 return.both=function(object=temp.peplist[[1]]){
   return(c(object@median.ratio,object@lm.ratio,as.numeric(object@median.ratio)-as.numeric(object@lm.ratio)))
 }
 
-lapply(FUN=return.median.ratio,stoich10)->medians
-lapply(FUN=return.lmrat,stoich10)->lmratios
-lapply(FUN=return.rank1.ratio,stoich10)->rank1
+lapply(FUN=return.median.ratio,stoich50)->medians
+lapply(FUN=return.lmrat,stoich50)->lmratios
+lapply(FUN=return.rank1.ratio,stoich50)->rank1
+lapply(FUN=return.top3.ratio,stoich50)->top3
 
 
 ave(na.omit(as.numeric(unlist(medians))))
@@ -390,11 +415,18 @@ sd(na.omit(as.numeric(unlist(lmratios))))
 ave(na.omit(as.numeric(unlist(rank1))))
 sd(na.omit(as.numeric(unlist(rank1))))
 
+ave(na.omit(as.numeric(unlist(top3))))
+sd(na.omit(as.numeric(unlist(top3))))
+
+dev.off()
+par()
 boxplot(na.omit(as.numeric(unlist(medians))),
         na.omit(as.numeric(unlist(lmratios))),
         na.omit(as.numeric(unlist(rank1))),
-        xlab=c("median","lmratios","rank1ion")
+        na.omit(as.numeric(unlist(top3))),
+        ylim=c(0,0.75),lwd=2
         )
+abline(h=0.5,lty=2)
 
   temp.peplist<-stoich10
   allratios<-list()
@@ -402,7 +434,7 @@ boxplot(na.omit(as.numeric(unlist(medians))),
     allratios[[j]]<-temp.peplist[[j]]@median.ratio
   }
   #temp.peplist1<-temp.peplist()
-  y=temp.peplist[[41]]@areas$position1$light
+  y=rank(temp.peplist[[41]]@areas$position1$light)
   x=temp.peplist[[41]]@areas$position1$heavy
   #plot(x,y)
   model<-lm(y~x)
