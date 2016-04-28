@@ -1,8 +1,11 @@
 setClass("Peptide", 
          slots=list(Kcount="integer",
                     sequence="character",
+                    protein.name="ANY",
+                    protein.position="ANY",
                     modpos="integer",
                     ionlist="list",
+                    iontypes="list",
                     areas="ANY",
                     areas.filtered="ANY",
                     median.ratio="ANY",
@@ -11,5 +14,6 @@ setClass("Peptide",
                     prec.z="vector",
                     lm.ratio="ANY",
                     rank1.ratio="ANY",
-                    top3.ratio="ANY"
+                    top3.ratio="ANY",
+                    fraction="vector"
          ))
