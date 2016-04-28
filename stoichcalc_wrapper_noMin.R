@@ -3,7 +3,7 @@ s2<-read.delim(file="stoichout1test2.tsv", head=T,stringsAsFactors=F)
 
 setwd("~/stoichiometry")
 ### read in skyline report
-s<-read.delim(file="stoichout1test5.tsv", head=T,stringsAsFactors=F)
+s<-read.delim(file="stoichout1test6.tsv", head=T,stringsAsFactors=F)
 
 
 s<-unique(s)
@@ -26,7 +26,7 @@ stoich1<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_1pct_light_sw1.mzXM
 
 stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzXML",
                        sky.report=set10pct,
-                       windowtable="windoe.txt",
+                       windowtab=read.delim(file="windoe.txt",head=F,stringsAsFactors=F),
                        ppm=30,
                        threshold=30,
                        mzrange=c(500,1500))
@@ -35,12 +35,12 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
   ###### get peptide info and make an object of peptide class with info
   peptides<-unique(sky.report[,"Peptide"])
   peplist<-list()
-  windowtab<-read.delim(file=windowtable,head=F,stringsAsFactors=F)
+  #windowtab<-read.delim(file=windowtable,head=F,stringsAsFactors=F)
   require(mzR)
   mslink <- openMSfile(filename=mzxml)
   hdlink <-	header(mslink)
   for(k in peptides){
-    #k<-peptides[1]
+    #k<-peptides[9]
     print(k)
     temppep<-new(Class="Peptide")
     temppep@ionlist<-getIons(sequence=k)
@@ -65,6 +65,12 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
         fragments<-na.omit(unlist(temppep@ionlist$L))
         fragments<-fragments[fragments<=mzrange[2]]
         nfrag[y]<-length(fragments)
+        bfrag<-unlist(temppep@ionlist$L$b_diff)
+        bfrag.ord<-which(bfrag!="NA")[1:(length(which(bfrag!="NA"))/2)]
+        yfrag<-unlist(temppep@ionlist$L$y_diff)
+        yfrag.ord<-which(yfrag!="NA")[1:(length(which(yfrag!="NA"))/2)]
+        temppep@iontypes<-list(bions=bfrag.ord,yions=yfrag.ord)
+        #nbfrag<-length(bfrag)
         ### reset counter to 1
         counter=1
         # xics[[y]]<-y
@@ -85,7 +91,7 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
           counter=counter+1
         }
       }
-      tempcounter<-counter
+
       #######################################################################
       #### heavy XICs, single lysine
       ########################################################################
@@ -107,32 +113,48 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       
       sumlight<-c()
       sumheavy<-c()
+      sumlightnames<-c()
+      sumheavynames<-c()
       ratio<-c()
       for(i in temppep@prec.z){
+        tempnames<-names(xicmat[[paste(i)]])
         for(x in 1:nfrag[i]){
           print(x)
           sumlight<-c(sumlight,sum(na.omit(xicmat[[paste(i)]][,x+1])))
           sumheavy<-c(sumheavy,sum(na.omit(xicmat[[paste(i)]][,x+nfrag[i]+1])))
+          sumlightnames<-c(sumlightnames,tempnames[x+1])
+          sumheavynames<-c(sumheavynames,tempnames[x+nfrag[i]+1])
           ratio<-c(ratio,sum(na.omit(xicmat[[paste(i)]][,x+1]))/(sum(na.omit(xicmat[[paste(i)]][,x+1]))+sum(na.omit(xicmat[[paste(i)]][,x+nfrag[i]+1]))))
         }
       }
-      median(na.omit(ratio))
-      sd(na.omit(ratio))
       #################################################
-      ### filter based on which values are at least 10 
+      ### filter based on which values are at least threshold
       sumheavy2<-sumheavy[which(sumheavy>=threshold)]
       sumlight2<-sumlight[which(sumheavy>=threshold)]
-      #sumheavy2<-sumheavy2[which(sumlight2>0)]
-      #sumlight2<-sumlight2[which(sumlight2>0)]
+      
+      ### vector of ion names for reporting
+      nprec<-length(temppep@prec.z)
+      ionnames<-rep(c(paste("b",temppep@iontypes$bions,sep=""),paste("b",temppep@iontypes$bions,sep="","++"),paste("y",temppep@iontypes$yions,sep=""),paste("y",temppep@iontypes$yions,"++",sep="")),times=nprec)
+      names(sumheavy)<-sumheavynames
+      names(sumlight)<-sumlightnames
+      
+      #### get and store ion names and masses
+      names(sumlight2)<-sumlightnames[which(sumheavy>=threshold)]
+      names(sumheavy2)<-sumheavynames[which(sumheavy>=threshold)]
+      ordinals<-ionnames[which(sumheavy>=threshold)]
+      temppep@iontypes[["position1"]]<-list(ordinals=ordinals,massL=names(sumlight2),massH=names(sumheavy2))
+
       
       ratios<-sumlight2/(sumlight2+sumheavy2)
-      ?mode
       median(round(ratios,digits=2))
-      #### return the media value of all ratios    
+      #### return the media value of all ratios
       temppep@areas[["position1"]]<-list(light=sumlight,heavy=sumheavy,ratio=ratio)
       temppep@areas.filtered[["position1"]]<-list(light=sumlight2,heavy=sumheavy2,ratio=ratios)
+      
       temppep@median.ratio[["position1"]]<-median(round(na.omit(ratios),digits=4))
       temppep@median.ratio.sd<-sd(na.omit(ratios))
+      
+      ### unused part for top3 and linear model stoich calc
       if(length(sumheavy)>2){
         
         y=sumlight
@@ -180,7 +202,13 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
         fragments<-na.omit(unlist(temppep@ionlist$LL$b_diff))
         fragments<-fragments[fragments<=mzrange[2]]
         nfrag[y]<-length(fragments)
-        ### reset counter to 1
+        nfrag[y]<-length(fragments)
+        bfrag<-unlist(temppep@ionlist$LL$b_diff)
+        bfrag.ord<-which(bfrag!="NA")[1:(length(which(bfrag!="NA"))/2)]
+        yfrag<-unlist(temppep@ionlist$LL$y_diff)
+        yfrag.ord<-which(yfrag!="NA")[1:(length(which(yfrag!="NA"))/2)]
+        temppep@iontypes<-list(bions=bfrag.ord,yions=yfrag.ord)
+        ### set counter to 1
         counter=1
         #b_diff.xicmat[[paste(y)]]<-data.frame()
         for(z in fragments){
@@ -222,13 +250,18 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       ### compute all the fragment to fragment ratios
       sumlight<-c()
       sumheavy<-c()
+      sumlightnames<-c()
+      sumheavynames<-c()
       ratio<-c()
       for(i in temppep@prec.z){
+        tempnames<-names(b_diff.xicmat[[paste(i)]])
         if(length(b_diff.xicmat[[paste(i)]])>0){
           for(x in 1:nfrag[i]){
             print(x)
             sumlight<-c(sumlight,sum(na.omit(b_diff.xicmat[[paste(i)]][,x+1])))
             sumheavy<-c(sumheavy,sum(na.omit(b_diff.xicmat[[paste(i)]][,x+nfrag[i]+1])))
+            sumlightnames<-c(sumlightnames,tempnames[x+1])
+            sumheavynames<-c(sumheavynames,tempnames[x+nfrag[i]+1])
             ratio<-c(ratio,sum(na.omit(b_diff.xicmat[[paste(i)]][,x+1]))/(sum(na.omit(b_diff.xicmat[[paste(i)]][,x+1]))+sum(na.omit(b_diff.xicmat[[paste(i)]][,x+nfrag[i]+1]))))
           }
         }
@@ -238,24 +271,38 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       ### filter based on which values are at least 10 
       sumheavy2<-sumheavy[which(sumheavy>=threshold)]
       sumlight2<-sumlight[which(sumheavy>=threshold)]
-      #sumheavy2<-sumheavy2[which(sumlight2>0)]
-      #sumlight2<-sumlight2[which(sumlight2>0)]
+      
+      ### vector of ion names for reporting
+      nprec<-length(temppep@prec.z)
+      ionnames<-rep(c(paste("b",temppep@iontypes$bions,sep=""),paste("b",temppep@iontypes$bions,sep="","++"),paste("y",temppep@iontypes$yions,sep=""),paste("y",temppep@iontypes$yions,"++",sep="")),times=nprec)
+      names(sumheavy)<-sumheavynames
+      names(sumlight)<-sumlightnames
+      
+      #### get and store ion names and masses
+      names(sumlight2)<-sumlightnames[which(sumheavy>=threshold)]
+      names(sumheavy2)<-sumheavynames[which(sumheavy>=threshold)]
+      ordinals<-ionnames[which(sumheavy>=threshold)]
+      temppep@iontypes[["position1"]]<-list(ordinals=ordinals,massL=names(sumlight2),massH=names(sumheavy2))
+    
+      
       ratios<-sumlight2/(sumlight2+sumheavy2)
-      #### return the media value of all ratios    
+      #### return the median value of all ratios    
       temppep@areas[["position1"]]<-list(light=sumlight,heavy=sumheavy,ratio=ratio)
       temppep@areas.filtered[["position1"]]<-list(light=sumlight2,heavy=sumheavy2,ratio=ratios)
       temppep@median.ratio[["position1"]]<-round(median(na.omit(ratios)),digits = 4)
-      if(length(sumheavy)>2){
-        
-        y=sumlight
-        x=sumheavy
-        model<-lm(y~x)
-        temppep@lm.ratio[["position1"]]<-coef(model)[2]
-        temppep@top3.ratio[["position1"]]<-ave(sumlight[order(sumheavy,decreasing=T)][1:3]/(sumheavy[order(sumheavy,decreasing=T)][1:3]+sumlight[order(sumheavy,decreasing=T)][1:3]))[1]
-        
-      }
-      temppep@rank1.ratio[["position1"]]<-sumlight2[sumheavy2==max(sumheavy2)]/(sumheavy2[sumheavy2==max(sumheavy2)]+sumlight2[sumheavy2==max(sumheavy2)])
       
+      #if(length(sumheavy)>2){
+      #  
+      #  y=sumlight
+      #  x=sumheavy
+      #  model<-lm(y~x)
+      #  temppep@lm.ratio[["position1"]]<-coef(model)[2]
+      #  temppep@top3.ratio[["position1"]]<-ave(sumlight[order(sumheavy,decreasing=T)][1:3]/(sumheavy[order(sumheavy,decreasing=T)][1:3]+sumlight[order(sumheavy,decreasing=T)][1:3]))[1]
+      #  
+      #}
+      temppep@rank1.ratio[["position1"]][["filtered"]]<-sumlight2[sumheavy2==max(sumheavy2)]/(sumheavy2[sumheavy2==max(sumheavy2)]+sumlight2[sumheavy2==max(sumheavy2)])
+      temppep@rank1.ratio[["position1"]][["unfiltered"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
+      rank(sumheavy)
       
       #### next extract y_diff
       
@@ -310,13 +357,18 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       ### compute all the fragment to fragment ratios
       sumlight<-c()
       sumheavy<-c()
+      sumlightnames<-c()
+      sumheavynames<-c()
       ratio<-c()
       for(i in temppep@prec.z){
+        tempnames<-names(y_diff.xicmat[[paste(i)]])
         if(length(y_diff.xicmat[[paste(i)]])>0){
           for(x in 1:nfrag[i]){
             print(x)
             sumlight<-c(sumlight,sum(na.omit(y_diff.xicmat[[paste(i)]][,x+1])))
             sumheavy<-c(sumheavy,sum(na.omit(y_diff.xicmat[[paste(i)]][,x+nfrag[i]+1])))
+            sumlightnames<-c(sumlightnames,tempnames[x+1])
+            sumheavynames<-c(sumheavynames,tempnames[x+nfrag[i]+1])
             ratio<-c(ratio,sum(na.omit(y_diff.xicmat[[paste(i)]][,x+1]))/(sum(na.omit(y_diff.xicmat[[paste(i)]][,x+1]))+sum(na.omit(y_diff.xicmat[[paste(i)]][,x+nfrag[i]+1]))))
           }
         }
@@ -326,8 +378,19 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       ### filter based on which values are at least 10 
       sumheavy2<-sumheavy[which(sumheavy>=threshold)]
       sumlight2<-sumlight[which(sumheavy>=threshold)]
-      #sumheavy2<-sumheavy2[which(sumlight2>0)]
-      #sumlight2<-sumlight2[which(sumlight2>0)]
+      
+      ### vector of ion names for reporting
+      nprec<-length(temppep@prec.z)
+      ionnames<-rep(c(paste("b",temppep@iontypes$bions,sep=""),paste("b",temppep@iontypes$bions,sep="","++"),paste("y",temppep@iontypes$yions,sep=""),paste("y",temppep@iontypes$yions,"++",sep="")),times=nprec)
+      names(sumheavy)<-sumheavynames
+      names(sumlight)<-sumlightnames
+      
+      #### get and store ion names and masses
+      names(sumlight2)<-sumlightnames[which(sumheavy>=threshold)]
+      names(sumheavy2)<-sumheavynames[which(sumheavy>=threshold)]
+      ordinals<-ionnames[which(sumheavy>=threshold)]
+      temppep@iontypes[["position1"]]<-list(ordinals=ordinals,massL=names(sumlight2),massH=names(sumheavy2))
+      
       ratios<-sumlight2/(sumlight2+sumheavy2)
       #### return the media value of all ratios    
       temppep@areas[["position2"]]<-list(light=sumlight,heavy=sumheavy,ratio=ratio)
@@ -335,15 +398,16 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       temppep@median.ratio[["position2"]]<-round(median(na.omit(ratios)), digits=4)
       print(k)
       print("double K peptide finished")
-      if(length(sumheavy)>2){
-        
-        y=sumlight
-        x=sumheavy
-        model<-lm(y~x)
-        temppep@lm.ratio[["position2"]]<-coef(model)[2]
-        temppep@top3.ratio[["position2"]]<-ave(sumlight[order(sumheavy,decreasing=T)][1:3]/(sumheavy[order(sumheavy,decreasing=T)][1:3]+sumlight[order(sumheavy,decreasing=T)][1:3]))[1]
-        
-      }
+      ### unused part to calc stoich from top3 or from linear model
+      #if(length(sumheavy)>2){
+      #  
+      #  y=sumlight
+      #  x=sumheavy
+       # model<-lm(y~x)
+      #  temppep@lm.ratio[["position2"]]<-coef(model)[2]
+      #  temppep@top3.ratio[["position2"]]<-ave(sumlight[order(sumheavy,decreasing=T)][1:3]/(sumheavy[order(sumheavy,decreasing=T)][1:3]+sumlight[order(sumheavy,decreasing=T)][1:3]))[1]
+      #  
+      #}
       temppep@rank1.ratio[["position2"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
       
     }
@@ -364,19 +428,19 @@ stoich4<-stoichwrapper(ppm=20,mzrange=c(100,1500),threshold=100)
 
 stoich0<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_0pct_light_sw1.mzXML",
                        sky.report=set0pct,
-                       ppm=15,mzrange=c(100,1500),
+                       ppm=20,mzrange=c(100,1500),
                        threshold=30)
 stoich1<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_1pct_light_sw1.mzXML",
                        sky.report=set1pct,
-                       ppm=15,mzrange=c(100,1500),
+                       ppm=20,mzrange=c(100,1500),
                        threshold=30)
 stoich10<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzXML",
                        sky.report=set10pct,
-                       ppm=15,mzrange=c(100,1500),
+                       ppm=20,mzrange=c(100,1500),
                        threshold=30)
 stoich50<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_50pct_light_sw1.mzXML",
                         sky.report=set50pct,
-                        ppm=15,mzrange=c(100,1500),
+                        ppm=20,mzrange=c(100,1500),
                         threshold=30)
 
 return.lmrat=function(object=temp.peplist[[1]]){
