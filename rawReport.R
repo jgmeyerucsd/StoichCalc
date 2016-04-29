@@ -2,15 +2,18 @@
 
 k<-paste(object[[6]]@sequence,collapse="")
 
-temppep<-object[[5]]
-i=5
+temppep<-object[[9]]
+i=9
 
-testreport<-fragmentRawReport()
+testreport<-fragmentRawReport(object=stoich0)
 
-fragmentRawReport=function(object=stoich0,skyline.report=set0pct){
+fragmentRawReport=function(object=stoich0,
+                           skyline.report=set0pct,
+                           output="testout.csv"){
   peptides<-skyline.report[,1]
   unique(skyline.report[,1])
   npep<-length(object)
+  
   fragreport<-data.frame()
   for(i in 1:npep){
     temppep<-object[[i]]
@@ -23,7 +26,7 @@ fragmentRawReport=function(object=stoich0,skyline.report=set0pct){
     ##########      single K peptides
     ##########################################################################################
     
-    if(nmod==1){
+    if(nmod==1 &  length(temppep@prec.z)>=1){
       
       light.prec.vec<-as.numeric(substr(names(temppep@areas$position1$light),start=6,stop=10))
       light.frag.vec<-substr(names(temppep@areas$position1$light),start=18,stop=25)
@@ -49,18 +52,18 @@ fragmentRawReport=function(object=stoich0,skyline.report=set0pct){
       }
       
       #### add part as below for nonsense with fragments above 1500
-      
-      iontype<-rep(rep(c(paste("b",temppep@iontypes$bions,sep=""),paste("b",temppep@iontypes$bions,sep="","++"),paste("y",temppep@iontypes$yions,sep=""),paste("y",temppep@iontypes$yions,"++",sep="")),times=nprec),times=2)
+      yfrag<-temppep@ionlist$LL$y_diff[na.omit(temppep@ionlist$L$b_diff<1500)]
+      iontype<-rep(rep(c(c(paste("b",temppep@iontypes$bions,sep=""),paste("b",temppep@iontypes$bions,sep="","++"))[na.omit(temppep@ionlist$L$b_diff<1500)],c(paste("y",temppep@iontypes$yions,sep=""),paste("y",temppep@iontypes$yions,"++",sep=""))[na.omit(temppep@ionlist$L$y_diff<1500)]),times=nprec),times=2)
 
       #### build report
-      temp.fragreportlines<-cbind(temp.reportfront,precursor.mz,fragment.mz,iontype,area,label.type)
+      temp.fragreport<-cbind(temp.reportfront,precursor.mz,fragment.mz,iontype,area,label.type)
     }
     
     ##########################################################################################
     ##########      single K peptides
     ##########################################################################################
     
-    if(nmod==2){
+    if(nmod==2 &  length(temppep@prec.z)>=1){
       pos1.light.prec.vec<-as.numeric(substr(names(temppep@areas$position1$light),start=6,stop=10))
       pos1.light.frag.vec<-substr(names(temppep@areas$position1$light),start=18,stop=25)
       pos2.light.prec.vec<-as.numeric(substr(names(temppep@areas$position2$light),start=6,stop=10))
@@ -114,7 +117,7 @@ fragmentRawReport=function(object=stoich0,skyline.report=set0pct){
       pos2.iontype<-rep(rep(c(paste("y",temppep@iontypes$yions,sep=""),paste("y",temppep@iontypes$yions,sep="","++"))[na.omit(temppep@ionlist$LL$y_diff<1500)],times=nprec),times=2)
       
       
-      pos2.iontype<-rep(rep(c(paste("y",temppep@iontypes$yions,sep=""),paste("y",temppep@iontypes$yions,"++",sep="")),times=nprec),times=2)
+      #pos2.iontype<-rep(rep(c(paste("y",temppep@iontypes$yions,sep=""),paste("y",temppep@iontypes$yions,"++",sep="")),times=nprec),times=2)
       
       #### build report
       cbind(temp.reportfront,precursor.mz,fragment.mz,iontype,area,label.type)
@@ -128,6 +131,7 @@ fragmentRawReport=function(object=stoich0,skyline.report=set0pct){
     
 
   }
+  write.csv(file=output,fragreport)
   fragreport
   
 }

@@ -5,14 +5,14 @@
 
 #mslink <- openMSfile(filename=file)
 #hdlink <-	header(ms)
-ms2xic=function(file="151204_0008_SStoich_lact_bRP8.mzXML",
+ms2xic=function(file="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzXML",
 	windows=read.delim(file="windoe.txt",head=F,stringsAsFactors=F),
-	precMz=674.3494,
+	precMz=1003.8,
 	precZ = 3,
-	fragMz=945.4499, 
+	fragMz=404.188938235, 
 	ppm=40,
-	rtrange=c(45,48),
-	type="h",
+	rtrange=c(47.76,48.42),
+	type="l",
 	Kcount=2,
 	moddelta=4.025107,
 	ms=mslink,
@@ -93,7 +93,7 @@ ms2xic=function(file="151204_0008_SStoich_lact_bRP8.mzXML",
 	  }
 	}
 
-	#if(length(precWinIndex)==1){
+	#if(precWinIndex!=1){
 	  ms2 <- which(hd$V22 == precWinIndex[1])
 	  rtsel <- hd$retentionTime[ms2] / 60 > rtrange[1] & hd$retentionTime[ms2] / 60 < rtrange[2]
 	  rtsel[which(rtsel==T)]
@@ -127,3 +127,4 @@ ms2xic=function(file="151204_0008_SStoich_lact_bRP8.mzXML",
 	  return(data.frame())
 	}
 }
+	
