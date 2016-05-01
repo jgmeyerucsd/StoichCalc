@@ -5,7 +5,11 @@ k<-paste(object[[6]]@sequence,collapse="")
 temppep<-object[[9]]
 i=9
 
-testreport<-fragmentRawReport(object=stoich0,output="testout2.csv")
+raw0<-fragmentRawReport(object=stoich0,output="0pct.csv")
+raw1<-fragmentRawReport(object=stoich1,output="1pct.csv")
+raw10<-fragmentRawReport(object=stoich10,output="10pct.csv")
+raw50<-fragmentRawReport(object=stoich50,output="50pct.csv")
+raw100<-fragmentRawReport(object=stoich100,output="100pct.csv")
 
 fragmentRawReport=function(object=stoich0,
                            skyline.report=set0pct,
@@ -192,7 +196,7 @@ fragmentRawReport=function(object=stoich0,
   }
   print("proportion with no shared prec window")
   print(unshared.win.count/npep)
-  write.csv(file=output,fragreport,row.names = F)
+  write.csv(file=paste("rawReport",output,sep="_",collapse=""),fragreport,row.names = F)
   fragreport
 }
 

@@ -19,6 +19,11 @@ stoich50<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_50pct_light_sw1.mz
                         sky.report=set50pct,
                         ppm=20,mzrange=c(100,1500),
                         threshold=30)
+stoich100<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_100pct_light_sw1.mzXML",
+                        sky.report=set100pct,
+                        ppm=20,mzrange=c(100,1500),
+                        threshold=30)
+
 
 return.lmrat=function(object=temp.peplist[[1]]){
   object@lm.ratio

@@ -11,7 +11,7 @@ peptides<-unique(s[,1])
 head(s)
 
 mzxmlfile="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzXML"
-
+set100pct<-s[which(s[,"File.Name"]=="151023_0002_BSA_100pct_light_sw1.mzXML"),]
 set50pct<-s[which(s[,"File.Name"]=="151023_0002_BSA_50pct_light_sw1.mzXML"),]
 set10pct<-s[which(s[,"File.Name"]=="151023_0002_BSA_10pct_light_sw1.mzXML"),]
 set1pct<-s[which(s[,"File.Name"]=="151023_0002_BSA_1pct_light_sw1.mzXML"),]
@@ -41,7 +41,7 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
   hdlink <-	header(mslink)
   pepcount=0
   for(k in peptides){
-    #k<-"KKFWGKYLYE"
+    #k<-peptides[6]
     print(k)
     pepcount=pepcount+1
     print(pepcount)
@@ -168,7 +168,9 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       
       temppep@median.ratio[["position1"]]<-median(round(na.omit(ratios),digits=4))
       temppep@median.ratio.sd<-sd(na.omit(ratios))
-      
+      if(length(ratio)>=1){
+        temppep@median.ratio.unfilt[["position1"]]<-median(round(na.omit(ratio),digits=4))
+      }
       ### unused part for top3 and linear model stoich calc
       if(length(sumheavy)>2){
         y=sumlight
@@ -290,7 +292,11 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       temppep@areas[["position1"]]<-list(light=sumlight,heavy=sumheavy,ratio=ratio)
       temppep@areas.filtered[["position1"]]<-list(light=sumlight2,heavy=sumheavy2,ratio=ratios)
       temppep@median.ratio[["position1"]]<-round(median(na.omit(ratios)),digits = 4)
-      
+      length(ratio)
+      if(length(ratio)>=1){
+        temppep@median.ratio.unfilt[["position1"]]<-median(round(na.omit(ratio),digits=4))
+      }
+      #temppep@median.ratio.unfilt[["position1"]]<-median(round(na.omit(ratio),digits=4))
       #if(length(sumheavy)>2){
       #  
       #  y=sumlight
@@ -395,6 +401,9 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       temppep@areas[["position2"]]<-list(light=sumlight,heavy=sumheavy,ratio=ratio)
       temppep@areas.filtered[["position2"]]<-list(light=sumlight2,heavy=sumheavy2,ratio=ratios)
       temppep@median.ratio[["position2"]]<-round(median(na.omit(ratios)), digits=4)
+      if(length(ratio)>=1){
+        temppep@median.ratio.unfilt[["position2"]]<-median(round(na.omit(ratio),digits=4))
+      }
       print(k)
       print("double K peptide finished")
       ### unused part to calc stoich from top3 or from linear model
