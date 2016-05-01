@@ -5,24 +5,40 @@ stoich4<-stoichwrapper(ppm=20,mzrange=c(100,1500),threshold=100)
 
 stoich0<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_0pct_light_sw1.mzXML",
                        sky.report=set0pct,
-                       ppm=20,mzrange=c(100,1500),
+                       ppm=30,mzrange=c(100,1500),
                        threshold=30)
 stoich1<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_1pct_light_sw1.mzXML",
                        sky.report=set1pct,
-                       ppm=20,mzrange=c(100,1500),
+                       ppm=30,mzrange=c(100,1500),
                        threshold=30)
 stoich10<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzXML",
                         sky.report=set10pct,
-                        ppm=20,mzrange=c(100,1500),
+                        ppm=30,mzrange=c(100,1500),
                         threshold=30)
 stoich50<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_50pct_light_sw1.mzXML",
                         sky.report=set50pct,
-                        ppm=20,mzrange=c(100,1500),
+                        ppm=30,mzrange=c(100,1500),
                         threshold=30)
 stoich100<-stoichwrapper(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_100pct_light_sw1.mzXML",
                         sky.report=set100pct,
-                        ppm=20,mzrange=c(100,1500),
+                        ppm=30,mzrange=c(100,1500),
                         threshold=30)
+
+
+raw0<-fragmentRawReport(object=stoich0,output="0pctv2.csv")
+raw1<-fragmentRawReport(object=stoich1,output="1pctv2.csv")
+raw10<-fragmentRawReport(object=stoich10,output="10pctv2.csv")
+raw50<-fragmentRawReport(object=stoich50,output="50pctv2.csv")
+raw100<-fragmentRawReport(object=stoich100,output="100pctv2.csv")
+
+results0<-fragmentResultsReport(object=stoich0,output="0pctv2.csv")
+results1<-fragmentResultsReport(object=stoich1,output="1pctv2.csv")
+results10<-fragmentResultsReport(object=stoich10,output="10pctv2.csv")
+results50<-fragmentResultsReport(object=stoich50,output="50pctv2.csv")
+results100<-fragmentResultsReport(object=stoich100,output="100pctv2.csv")
+
+
+
 
 
 return.lmrat=function(object=temp.peplist[[1]]){

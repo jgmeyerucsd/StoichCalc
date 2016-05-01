@@ -179,8 +179,13 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
         temppep@lm.ratio[["position1"]]<-coef(model)[2]
         temppep@top3.ratio[["position1"]]<-ave(sumlight[order(sumheavy,decreasing=T)][1:3]/(sumheavy[order(sumheavy,decreasing=T)][1:3]+sumlight[order(sumheavy,decreasing=T)][1:3]))[1]
       }
-      temppep@rank1.ratio[["position1"]]<-list(filtered=sumlight2[sumheavy2==max(sumheavy2)]/(sumheavy2[sumheavy2==max(sumheavy2)]+sumlight2[sumheavy2==max(sumheavy2)]))
-      temppep@rank1.ratio[["position1"]][["unfiltered"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
+      #### heavy rank1 ratios
+      temppep@heavy.rank1.ratio[["position1"]]<-list(filtered=sumlight2[sumheavy2==max(sumheavy2)]/(sumheavy2[sumheavy2==max(sumheavy2)]+sumlight2[sumheavy2==max(sumheavy2)]))
+      temppep@heavy.rank1.ratio[["position1"]][["unfiltered"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
+      ##### light rank1 ratios
+      temppep@light.rank1.ratio[["position1"]]<-list(filtered=sumlight2[sumlight2==max(sumlight2)]/(sumheavy2[sumlight2==max(sumlight2)]+sumlight2[sumlight2==max(sumlight2)]))
+      temppep@light.rank1.ratio[["position1"]][["unfiltered"]]<-sumlight[sumlight==max(sumlight)]/(sumheavy[sumlight==max(sumlight)]+sumlight[sumlight==max(sumlight)])
+      
       print("singleK peptide finished")
     }
     
@@ -306,8 +311,12 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       #  temppep@top3.ratio[["position1"]]<-ave(sumlight[order(sumheavy,decreasing=T)][1:3]/(sumheavy[order(sumheavy,decreasing=T)][1:3]+sumlight[order(sumheavy,decreasing=T)][1:3]))[1]
       #  
       #}
-      temppep@rank1.ratio[["position1"]]<-list(filtered=sumlight2[sumheavy2==max(sumheavy2)]/(sumheavy2[sumheavy2==max(sumheavy2)]+sumlight2[sumheavy2==max(sumheavy2)]))
-      temppep@rank1.ratio[["position1"]][["unfiltered"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
+      #### heavy rank 1 ratios
+      temppep@heavy.rank1.ratio[["position1"]]<-list(filtered=sumlight2[sumheavy2==max(sumheavy2)]/(sumheavy2[sumheavy2==max(sumheavy2)]+sumlight2[sumheavy2==max(sumheavy2)]))
+      temppep@heavy.rank1.ratio[["position1"]][["unfiltered"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
+      ##### light rank1 ratios
+      temppep@light.rank1.ratio[["position1"]]<-list(filtered=sumlight2[sumlight2==max(sumlight2)]/(sumheavy2[sumlight2==max(sumlight2)]+sumlight2[sumlight2==max(sumlight2)]))
+      temppep@light.rank1.ratio[["position1"]][["unfiltered"]]<-sumlight[sumlight==max(sumlight)]/(sumheavy[sumlight==max(sumlight)]+sumlight[sumlight==max(sumlight)])
       
       #### next extract y_diff
       
@@ -416,8 +425,11 @@ stoichwrapper=function(mzxml="G:/tmp/BSAsucc/151023_0002_BSA_10pct_light_sw1.mzX
       #  temppep@top3.ratio[["position2"]]<-ave(sumlight[order(sumheavy,decreasing=T)][1:3]/(sumheavy[order(sumheavy,decreasing=T)][1:3]+sumlight[order(sumheavy,decreasing=T)][1:3]))[1]
       #  
       #}
-      temppep@rank1.ratio[["position2"]]<-list(filtered=sumlight2[sumheavy2==max(sumheavy2)]/(sumheavy2[sumheavy2==max(sumheavy2)]+sumlight2[sumheavy2==max(sumheavy2)]))
-      temppep@rank1.ratio[["position2"]][["unfiltered"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
+      temppep@heavy.rank1.ratio[["position2"]]<-list(filtered=sumlight2[sumheavy2==max(sumheavy2)]/(sumheavy2[sumheavy2==max(sumheavy2)]+sumlight2[sumheavy2==max(sumheavy2)]))
+      temppep@heavy.rank1.ratio[["position2"]][["unfiltered"]]<-sumlight[sumheavy==max(sumheavy)]/(sumheavy[sumheavy==max(sumheavy)]+sumlight[sumheavy==max(sumheavy)])
+      ##### light rank1 ratios
+      temppep@light.rank1.ratio[["position2"]]<-list(filtered=sumlight2[sumlight2==max(sumlight2)]/(sumheavy2[sumlight2==max(sumlight2)]+sumlight2[sumlight2==max(sumlight2)]))
+      temppep@light.rank1.ratio[["position2"]][["unfiltered"]]<-sumlight[sumlight==max(sumlight)]/(sumheavy[sumlight==max(sumlight)]+sumlight[sumlight==max(sumlight)])
       
       }
       

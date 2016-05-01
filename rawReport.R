@@ -3,13 +3,14 @@
 k<-paste(object[[6]]@sequence,collapse="")
 
 temppep<-object[[9]]
+i=1
 i=9
 
-raw0<-fragmentRawReport(object=stoich0,output="0pct.csv")
-raw1<-fragmentRawReport(object=stoich1,output="1pct.csv")
-raw10<-fragmentRawReport(object=stoich10,output="10pct.csv")
-raw50<-fragmentRawReport(object=stoich50,output="50pct.csv")
-raw100<-fragmentRawReport(object=stoich100,output="100pct.csv")
+raw0<-fragmentRawReport(object=stoich0,output="0pctv2.csv")
+raw1<-fragmentRawReport(object=stoich1,output="1pctv2.csv")
+raw10<-fragmentRawReport(object=stoich10,output="10pctv2.csv")
+raw50<-fragmentRawReport(object=stoich50,output="50pctv2.csv")
+raw100<-fragmentRawReport(object=stoich100,output="100pctv2.csv")
 
 fragmentRawReport=function(object=stoich0,
                            skyline.report=set0pct,
@@ -63,6 +64,7 @@ fragmentRawReport=function(object=stoich0,
       
       ### part to determine ion rank or just order them by rank
       heavy.ranks<-as.numeric(rank(-heavy.area.vec,ties.method = "first"))
+      light.ranks<-as.numeric(rank(-light.area.vec,ties.method = "first"))
       
       ### combined heavy/light vectors
       precursor.mz<-c(light.prec.vec,heavy.prec.vec)
@@ -85,7 +87,7 @@ fragmentRawReport=function(object=stoich0,
       iontype<-rep(rep(c(c(paste("b",temppep@iontypes$bions,sep=""),paste("b",temppep@iontypes$bions,sep="","++"))[na.omit(temppep@ionlist$L$b_diff<1500)],c(paste("y",temppep@iontypes$yions,sep=""),paste("y",temppep@iontypes$yions,"++",sep=""))[na.omit(temppep@ionlist$L$y_diff<1500)]),times=nprec),times=2)
 
       #### build report
-      temp.fragreport<-cbind(temp.reportfront,precursor.mz,precursor.z,fragment.mz,iontype,area,observed.rank,label.type)
+      temp.fragreport<-cbind(temp.reportfront,precursor.mz,precursor.z,fragment.mz,iontype,area,observed.rank.heavy=heavy.ranks,observed.rank.light=light.ranks,label.type)
     }
     
     ##########################################################################################
@@ -138,7 +140,9 @@ fragmentRawReport=function(object=stoich0,
       
       ### part to determine ion rank or just order them by rank
       pos1.heavy.ranks<-as.numeric(rank(-pos1.heavy.area.vec,ties.method = "first"))
+      pos1.light.ranks<-as.numeric(rank(-pos1.light.area.vec,ties.method = "first"))
       pos2.heavy.ranks<-as.numeric(rank(-pos2.heavy.area.vec,ties.method = "first"))
+      pos2.light.ranks<-as.numeric(rank(-pos2.light.area.vec,ties.method = "first"))
       
       ### combined heavy/light vecotrs
       pos1.precursor.mz<-c(pos1.light.prec.vec,pos1.heavy.prec.vec)
@@ -146,14 +150,16 @@ fragmentRawReport=function(object=stoich0,
       pos1.area<-c(pos1.light.area.vec,pos1.heavy.area.vec)
       pos1.label.type<-c(rep("L",times=length(pos1.light.area.vec)),rep("H",times=length(pos1.heavy.prec.vec)))
       pos1.precursor.z<-c(pos1.light.prec.z.vec,pos1.heavy.prec.z.vec)
-      pos1.observed.rank<-rep(pos1.heavy.ranks,times=2)
+      pos1.observed.rank.heavy<-rep(pos1.heavy.ranks,times=2)
+      pos1.observed.rank.light<-rep(pos1.light.ranks,times=2)
       
       pos2.precursor.mz<-c(pos2.light.prec.vec,pos2.heavy.prec.vec)
       pos2.fragment.mz<-c(pos2.light.frag.vec,pos2.heavy.frag.vec)
       pos2.area<-c(pos2.light.area.vec,pos2.heavy.area.vec)
       pos2.label.type<-c(rep("L",times=length(pos2.light.area.vec)),rep("H",times=length(pos2.heavy.prec.vec)))
       pos2.precursor.z<-c(pos2.light.prec.z.vec,pos2.heavy.prec.z.vec)
-      pos2.observed.rank<-rep(pos2.heavy.ranks,times=2)
+      pos2.observed.rank.heavy<-rep(pos2.heavy.ranks,times=2)
+      pos2.observed.rank.light<-rep(pos2.light.ranks,times=2)
       
       
       pos1.temp.reportline<-data.frame(Protein=temppep@protein.name,Peptide=paste(temppep@sequence,collapse=""),peptide.mod.pos=temppep@modpos[1],protein.mod.pos=temppep@protein.position[1])
@@ -186,8 +192,8 @@ fragmentRawReport=function(object=stoich0,
       
       #### build report
       #cbind(temp.reportfront,precursor.mz,fragment.mz,iontype,area,label.type)
-      pos1.temp.fragreportlines<-cbind(pos1.temp.reportfront,precursor.mz=pos1.precursor.mz,precursor.z=pos1.precursor.z,fragment.mz=pos1.fragment.mz,iontype=pos1.iontype,area=pos1.area,observed.rank=pos1.observed.rank,label.type=pos1.label.type)
-      pos2.temp.fragreportlines<-cbind(pos2.temp.reportfront,precursor.mz=pos2.precursor.mz,precursor.z=pos2.precursor.z,fragment.mz=pos2.fragment.mz,iontype=pos2.iontype,area=pos2.area,observed.rank=pos2.observed.rank,label.type=pos2.label.type)
+      pos1.temp.fragreportlines<-cbind(pos1.temp.reportfront,precursor.mz=pos1.precursor.mz,precursor.z=pos1.precursor.z,fragment.mz=pos1.fragment.mz,iontype=pos1.iontype,area=pos1.area,observed.rank.heavy=pos1.observed.rank.heavy,observed.rank.light=pos1.observed.rank.light,label.type=pos1.label.type)
+      pos2.temp.fragreportlines<-cbind(pos2.temp.reportfront,precursor.mz=pos2.precursor.mz,precursor.z=pos2.precursor.z,fragment.mz=pos2.fragment.mz,iontype=pos2.iontype,area=pos2.area,observed.rank.heavy=pos2.observed.rank.heavy,observed.rank.light=pos2.observed.rank.light,label.type=pos2.label.type)
       temp.fragreport<-rbind(pos1.temp.fragreportlines,pos2.temp.fragreportlines)
     }
     
