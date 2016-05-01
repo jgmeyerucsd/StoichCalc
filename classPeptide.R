@@ -17,5 +17,7 @@ setClass("Peptide",
                     heavy.rank1.ratio="ANY",
                     light.rank1.ratio="ANY",
                     top3.ratio="ANY",
-                    fraction="vector"
+                    fraction="vector",
+                    rank1ion="ANY",
+                    reportlines="list"
          ))
